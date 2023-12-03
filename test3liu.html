@@ -1,0 +1,760 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <title>Experiment3 v2.0</title>
+    <script src="https://unpkg.com/jspsych@7.3.4"></script>
+    <link rel="stylesheet" href="https://unpkg.com/jspsych@7.3.4/css/jspsych.css">
+	<link rel="stylesheet" href="https://unpkg.com/@jspsych/plugin-survey@0.2.2/css/survey.css">
+	<script src="https://unpkg.com/@jspsych/plugin-preload@1.1.3"></script>
+	<script src="https://unpkg.com/@jspsych/plugin-fullscreen@1.2.1"></script>
+	<script src="https://unpkg.com/@jspsych/plugin-html-keyboard-response@1.1.3"></script>
+	<script src="https://unpkg.com/@jspsych/plugin-html-button-response@1.1.3"></script>
+	<script src="https://unpkg.com/@jspsych/plugin-image-keyboard-response@1.1.3"></script>
+	<script src="https://unpkg.com/@jspsych/plugin-survey-multi-choice@1.1.3"></script>
+	<script src="https://unpkg.com/@jspsych/plugin-survey-text@1.1.3"></script>
+	<script src="https://unpkg.com/@jspsych/plugin-survey@0.2.2"></script>
+	<script src="https://unpkg.com/@jspsych/plugin-survey-likert@1.1.3"></script>
+	<script src="https://unpkg.com/@jspsych-contrib/plugin-pipe"></script>
+  <body></body>
+  <script>
+	var jsPsych = initJsPsych({
+		on_finish: function() {
+			document.exitFullscreen();	
+			//定义结束语
+			jsPsych.getDisplayElement().innerHTML =  `
+					<p>ご協力ありがとうございました。</p>
+					<p>作業コードは0618です。</p>
+					<p>Yahoo!クラウドソーシングの方で正しくコードを入力されると報酬のポイントを獲得できます。間違えないようお気をつけください。</p>
+					<p>実験は終了です。ウインドウを閉じてください。</p>
+				`;
+			jsPsych.data.displayData();
+		}
+	});
+	const subject_id = jsPsych.randomization.randomID(10);
+    const filename = `${subject_id}.csv`;
+            
+	// 创建一个jspsych实验对象
+	var timeline = [];
+
+	var preload = {
+    type: jsPsychPreload,
+    auto_preload: true,
+	show_detailed_errors: true,
+	images: ['image/brb_sadness.png' , 'image/brb_surprise.png' ,'image/brp_happyness.png' ,'image/brp_sadness.png' ,'image/brp_surprise.png' ,'image/dky_happyness.png' ,'image/dky_sadness.png' ,'image/dky_surprise.png']
+	};
+
+	timeline.push(preload);
+
+
+    // 定义实验告知书的内容
+	var consent_html = `
+		<h1>実験参加同意書</h1>
+		<p>この度は，実験へのご参加いただき，誠にありがとうございます。はじめに，実験内容についてご説明いたします。</p>
+		<p>本研究では，色が人の認知に与及ぼす影響に関する研究を目的としており，コンピュータを使用した実験を行います。実験の所要時間は，準備や説明を含めて約10分程度の予定です。</p>
+		<p>本研究に参加は参加者の皆様の自由意志に基づいており，参加をご辞退されたとしても一切の不利益はございません。また，本研究への参加同意後であっても，いかなる理由においても途中で研究参加への同意を撤回することが可能です。その際も，不利益を生じることはございません。</p>
+        <p>なお，本研究を通じで得られた情報は，本研究に直接関わる目的以外には使用されません。研究の成果は学術論文や学会発表などで公表される可能性がありますが，データは匿名で収集され，分析には統計処理した数値のみを使用するため，個人が特定されることはあございません。</p>
+        <p>本研究への参加に対する謝礼は，Yahoo!クラウドソーシングを通して支払われます。実験終了後に，コードを記載したリンクが表示されますので，<b>必ず記録し</b>，Yahoo!クラウドソーシングのページに戻って入力してください。 </p>
+        <p>本研究は，九州大学大学院人間環境学研究院の研究倫理委員会の承認を得た上で実施されます（申請番号：2023-026）。</p>
+        <p>タスク内にはあなたの健康に関する質問項目がありますのでご注意ください。</p>
+        <p>本研究に関するお問い合わせは，以下の連絡先にお願いいたします。</p>
+        <p>〒819-0395 福岡市西区元岡744</p>
+        <p>九州大学大学院 人間環境学府　行動システム専攻</p>
+        <p>心理学コース</p>
+        <p>【担当者: 劉カシン・連絡先（email）: ljiaxin520@yahoo.com 】</p>
+        <p>以上の内容をご理解いただき，実験へのご参加に同意される場合は，「同意します」をクリックしてください。</p>
+        <p>同意されない場合は， そのままウインドウを閉じてください。</p>
+	`;
+	// 定义是否同意实验的选项
+	var consent_options = ["同意します", "同意しません"];
+
+
+	// 创建一个jspsych试验，显示实验告知书和是否同意实验的选项
+	var consent_trial = {
+		type: jsPsychHtmlButtonResponse,
+		stimulus: consent_html,
+		choices: consent_options,
+		data: {
+			trial_id: 'consent'
+			},
+		on_finish: function(data){
+			// 如果被试选择了“不同意”，则结束实验
+			if(data.response == 1){
+				//document.exitFullscreen(); // 退出全屏模式
+				jsPsych.endExperiment('ありがとうございました。そのままウインドウを閉じてください。');
+			}
+		}
+	};
+	// 将consent_trial添加到实验对象中
+	timeline.push(consent_trial);
+
+
+	var gender_question = {
+		type: jsPsychSurveyMultiChoice,
+		questions: [
+			{
+				prompt: "あなたの性別を教えてください。", name: 'gender', options: ["男性", "女性", "その他"],
+				required: true
+			},
+		],
+		button_label: '次へ',
+		data: {
+			trial_id: 'gender'
+		},
+		on_finish: function(data){
+			data.gender = data.response.gender;
+		}
+	};
+	timeline.push(gender_question);
+
+	var age;
+	var age_question = {
+		type: jsPsychSurveyText,
+		questions: [
+			{prompt: "あなたの年齢を教えてください。（半角数字のみ）", name: 'age', required: true}
+		],
+		button_label: '次へ',
+		data: {
+			trial_id: 'age'
+		},
+		on_finish: function(data){
+			data.age = data.response.age;
+			age = data.response.age;
+		}
+	};
+
+
+	// 创建一个循环试验，包含age_question试验
+	var loop_age_question = {
+		timeline: [age_question], // 设置循环的试验
+		loop_function: function(){
+		// 获取被试输入的年龄
+		// 判断年龄是否为数字，且在0-120之间
+		if(isNaN(age) || age < 16 || age > 120){
+			// 如果不符合条件，返回true，表示需要重复输入
+			alert('正しい年齢を教えてください。');
+			return true;
+		} else {
+			// 如果符合条件，返回false，表示不需要重复输入
+			return false;
+		}
+		}, // 设置循环的条件
+	};
+
+	timeline.push(loop_age_question);
+
+
+	// 定义一个变量，存储国籍的选项
+	var nationality_options = [
+	  '日本',
+	  '中国',
+	  'アメリカ',
+	  'イギリス',
+	  'その他'
+	];
+	// 定义一个变量，存储被试选择的国籍
+	var nationality;
+
+	// 定义一个survey-multi-choice模块，呈现一个单选题，要求被试选择国籍
+	var nationality_trial = {
+	  type: jsPsychSurveyMultiChoice,
+	  questions: [
+		{
+		  prompt: 'あなたの国籍を教えてください。',
+		  options: nationality_options,
+		  required: true,
+		  name: 'nationality'
+		}
+	  ],
+	  button_label: '次へ',
+	  // 定义一个函数，获取被试选择的国籍
+	  on_finish: function(data) {
+		data.nationality = data.response.nationality;
+		// 获取被试选择的国籍
+		nationality = data.response.nationality;
+	  }
+	};
+
+	timeline.push(nationality_trial);
+
+	// 定义一个变量，存储被试输入的国籍
+	var nationality_input;
+
+	// 定义一个survey-text模块，呈现一个文本框，要求被试输入国籍
+	var nationality_input_trial = {
+	  type: jsPsychSurveyText,
+	  questions: [
+		{
+		  prompt: 'ここに国籍を記入してください',
+		  placeholder: '例：フランス',
+		  required: true,
+		  name: 'nationality_input'
+		}
+	  ],
+	  button_label: '次へ',
+	  // 定义一个函数，获取被试输入的国籍
+	  on_finish: function(data) {
+		data.nationality_input = data.response.nationality_input;
+		// 获取被试输入的国籍
+		nationality_input = data.response.nationality_input;
+	  }
+	};
+
+	// 定义一个条件结构，根据被试选择的国籍，决定是否呈现nationality_input_trial
+	var nationality_input_conditional = {
+	  timeline: [nationality_input_trial],
+	  conditional_function: function() {
+		// 如果被试选择的国籍是其他，返回true，呈现nationality_input_trial
+		if (nationality == 'その他') {
+		  return true;
+		}
+		// 否则，返回false，跳过nationality_input_trial
+		return false;
+	  }
+	};
+
+	// 将nationality_input_conditional添加到实验的时间线中
+	timeline.push(nationality_input_conditional);
+
+	// 定义flanders惯用手日语测试说明文的内容
+	var handedness_html = `
+		<h1>これからさまざまな場面で，左右どちらの手をあなたが使うか質問します。</h1>
+		<p>下に示した10項目のそれぞれについて，表の右はしにある選択肢「左」，「どちらも」，「右」の一つにクリックして，回答してください。</p>
+		<p>「どちらも」の選択肢は，左右の手を全く同じくらい使う場合のみ選択してください。</p>
+        <p>すべての項目に回答してください。</p>
+		<p>10項目のなかには，あなたにとってほとんど経験がないことがあるかもしれません。</p>
+        <p>たとえ経験がなくとも，その場面や課題を想像し回答してください。</p>
+	`;
+	// 定义开始惯用手的按钮
+	var handedness_startbutton = "次へ";
+
+	// 开始进行flanders惯用手日语测试
+	var handedness_trial = {
+		type: jsPsychHtmlButtonResponse,
+		stimulus: handedness_html,
+		choices: [handedness_startbutton],
+		data: {
+			trial_id: 'handedness_trial'
+		}
+	};
+	// 将handedness_trial添加到实验对象中
+	timeline.push(handedness_trial);
+
+	//定义一个惯用手测试问卷
+	var handedness_question = {
+		type: jsPsychSurvey,
+		pages: [
+			[
+				{
+					type: 'multi-choice',
+					prompt: "文字を書くとき，ペンをどちらの手で持ちますか？", 
+					options: ["左", "どちらも", "右"],
+					name: 'handedness_Q1', 
+					required: true,
+					columns: 0
+				},
+				{
+					type: 'multi-choice',
+					prompt: "食事のとき，スプーンをどちらの手で持ちますか？", 
+					options: ["左", "どちらも", "右"],
+					name: 'handedness_Q2', 
+					required: true,
+					columns: 0
+				},
+				{
+					type: 'multi-choice',
+					prompt: "歯をみがくとき，歯ブラシをどちらの手で持ちますか？", 
+					options: ["左", "どちらも", "右"],
+					name: 'handedness_Q3', 
+					required: true,
+					columns: 0
+				},
+				{
+					type: 'multi-choice',
+					prompt: "マッチをするとき，マッチの軸をどちらの手で持ちますか？", 
+					options: ["左", "どちらも", "右"],
+					name: 'handedness_Q4', 
+					required: true,
+					columns: 0
+				},
+			],
+			[
+				{
+					type: 'multi-choice',
+					prompt: "消しゴムで文字を消すとき，消しゴムをどちらの手で持って消しますか？", 
+					options: ["左", "どちらも", "右"],
+					name: 'handedness_Q5',
+					required: true,
+					columns: 0
+				},
+				{
+					type: 'multi-choice',
+					prompt: "縫いものをするとき，針をどちらの手で持って使いますか？", 
+					options: ["左", "どちらも", "右"],
+					name: 'handedness_Q6',
+					required: true,
+					columns: 0
+				},
+				{
+					type: 'multi-choice',
+					prompt: "パンにバターをぬるとき，ナイフをどちらの手で持ちますか？", 
+					options: ["左", "どちらも", "右"],
+					name: 'handedness_Q7',
+					required: true,
+					columns: 0
+				},
+				{
+					type: 'multi-choice',
+					prompt: "クギを打つとき，カナヅチをどちらの手で持ちますか？", 
+					options: ["左", "どちらも", "右"],
+					name: 'handedness_Q8',
+					required: true,
+					columns: 0
+				},
+			],
+			[
+				{
+					type: 'multi-choice',
+					prompt: "リンゴの皮をむくとき，皮むき器をどちらの手で持ちますか？", 
+					options: ["左", "どちらも", "右"],
+					name: 'handedness_Q9',
+					required: true,
+					columns: 0
+				},
+				{
+					type: 'multi-choice',
+					prompt: "絵を描くとき，ペンや筆をどちらの手で持ちますか？", 
+					options: ["左", "どちらも", "右"],
+					name: 'handedness_Q10',
+					required: true,
+					columns: 0
+				}
+			],
+		],
+		button_label_next: '次へ',
+		button_label_back: '戻る',
+		button_label_finish: '完成',
+		on_finish: function(data){
+			data.handedness_Q1 = data.response.handedness_Q1;
+			data.handedness_Q2 = data.response.handedness_Q2;
+			data.handedness_Q3 = data.response.handedness_Q3;
+			data.handedness_Q4 = data.response.handedness_Q4;
+			data.handedness_Q5 = data.response.handedness_Q5;
+			data.handedness_Q6 = data.response.handedness_Q6;
+			data.handedness_Q7 = data.response.handedness_Q7;
+			data.handedness_Q8 = data.response.handedness_Q8;
+			data.handedness_Q9 = data.response.handedness_Q9;
+			data.handedness_Q10 = data.response.handedness_Q10;
+		}
+	};
+	timeline.push(handedness_question);
+	
+	  
+        //定义是否是对于颜色不敏感 
+	var colorBlindness_question = {
+		type: jsPsychSurveyMultiChoice,
+		questions: [
+			{
+				prompt: "過去に色覚検査等で何らかの特性を診断・指摘されたことがありますか？", name: 'colorBlindness', options: ["はい", "いいえ"],
+				required: true
+			},
+		],
+		button_label: '次へ',
+		data: {
+			trial_id: 'colorBlindness'
+		},
+		on_finish: function(data) {
+		data.colorBlindness = data.response.colorBlindness;
+		
+	    }
+	};
+	timeline.push(colorBlindness_question);
+
+	var fullscreen_trial = {
+		type: jsPsychFullscreen,
+		fullscreen_mode: true, // 开启全屏模式
+		message:`
+			<p>＊以下は，実験を実施するにあたっての注意事項です。</p>
+			<p>各項目を確認し，準備が整いましたら「次へ」をクリックしてください。</p>
+			<p>・スマートフォンやタブレットではなく，パソコンで実験に参加してください.</p>
+			<p>・静かな環境で，一人で集中して実験を受けてください。</p>
+			<p>・パソコンや携帯電話の通知をオフにしてください。</p>
+			<p>・ブラウザの「戻る」ボタンや「更新」ボタンは押さないでください。</p>
+			<p>実験が始まると，ウインドウが自動的に最大化されます。そのまま実験を進めてください。</p>
+		`,  //全屏模式的提示信息
+		button_label: '次へ' // 全屏模式的按钮标签
+	};
+	// 将fullscreen_trial添加到实验对象中
+	timeline.push(fullscreen_trial);
+
+	// 定义说明文的内容s
+	var explanation_html = `
+		<h1>説明</h1>
+		<p>この実験では，以下の説明のとおりに，提示される「単語」を評価・配置していただきます。</p>
+		<p>次のページから，注視点の後に3つの色で書かれた単語が表示されるので，その単語を評価し，ふさわしいと思う位置を決めてください。</p>
+        <p>評価は，「非常に不快」から「非常に快」までの7つの選択肢から選ぶことができます。マウスでクリックして選択してください。</p>
+		<p>配置は，枠内のふさわしいと思う位置をクリックして単語を置いてください。</p>
+        <p>「実験開始」をクリックして実験を進めてください。</p>
+	`;
+	// 定义开始实验的按钮
+	var explanation_startbutton = "実験開始";
+	// 创建一个练习jspsych试验，显示说明文和开始实验的按钮
+	var explanation_trial = {
+		type: jsPsychHtmlButtonResponse,
+		stimulus: explanation_html,
+		choices: [explanation_startbutton],
+		data: {
+			trial_id: 'explanation_trial'
+		}
+	};
+	// 将explanation_trial添加到实验对象中
+	timeline.push(explanation_trial);
+
+	// 定义一个jspsych教示试验说明
+	var practiceInstruction_html = `
+		<h1>練習</h1>
+		<p>本番の実験を始める前に、練習を行います。</p>
+		<p>「練習開始」をクリックして実験を進めてください。</p>
+	`;
+	// 定义开始实验的按钮
+	var practiceInstruction_startbutton = "練習開始";
+	// 创建一个练习jspsych试验，显示说明文和开始实验的按钮
+	var practiceInstruction_trial = {
+		type: jsPsychHtmlButtonResponse,
+		stimulus: practiceInstruction_html,
+		choices: [practiceInstruction_startbutton],
+		data: {
+			trial_id: 'practiceInstruction'
+		}
+	};
+
+	// 将practiceInstruction_trial添加到实验对象中
+	timeline.push(practiceInstruction_trial);
+
+	// 定义一个变量，存储被试选择的坐标
+	var coordinate;
+	var coordinateX;
+	var coordinateY;
+
+
+
+	// 定义一个函数，绘制一个二维坐标轴，并添加点击事件
+	function draw_axis() {
+		// 获取网页中的画布元素
+		var canvas = document.getElementById('canvas');
+		// 获取画布的上下文对象
+		var ctx = canvas.getContext('2d');
+		// 设置画布的宽度和高度
+		canvas.width = 600;
+		canvas.height = 600;
+		// 设置画笔的颜色和宽度
+		ctx.strokeStyle = 'black';
+		ctx.lineWidth = 2;
+		// 绘制外框
+		ctx.beginPath();
+		ctx.moveTo(50, 50);
+		ctx.lineTo(50, 550);
+		ctx.lineTo(550, 550);
+		ctx.lineTo(550, 50);
+		ctx.lineTo(50, 50);
+		ctx.stroke();
+		// 绘制虚线
+		ctx.setLineDash([8, 4]);  // [实线长度, 间隙长度]
+		ctx.lineDashOffset = -0;
+		ctx.lineWidth = 1;
+		ctx.beginPath();
+		ctx.moveTo(50, 175);
+		ctx.lineTo(550, 175);
+		ctx.stroke();
+		ctx.beginPath();
+		ctx.moveTo(50, 300);
+		ctx.lineTo(550, 300);
+		ctx.stroke();
+		ctx.beginPath();
+		ctx.moveTo(50, 425);
+		ctx.lineTo(550, 425);
+		ctx.stroke();
+		ctx.beginPath();
+		ctx.moveTo(175, 50);
+		ctx.lineTo(175, 550);
+		ctx.stroke();
+		ctx.beginPath();
+		ctx.moveTo(300, 50);
+		ctx.lineTo(300, 550);
+		ctx.stroke();
+		ctx.beginPath();
+		ctx.moveTo(425, 50);
+		ctx.lineTo(425, 550);
+		ctx.stroke();
+		// 绘制坐标轴的刻度
+		ctx.font = '12px Arial';
+		ctx.textAlign = 'center';
+		ctx.textBaseline = 'middle';
+		for (var i = -10; i <= 10; i++) {
+			/*// 跳过原点
+			if (i == 0) {
+			  continue;
+			}*/
+			// 绘制x轴的刻度
+			ctx.beginPath();
+			ctx.moveTo(300 + i * 25, 550);
+			ctx.lineTo(300 + i * 25, 545);
+			ctx.stroke();
+			ctx.fillText(i, 300 + i * 25, 570);
+			// 绘制y轴的刻度
+			ctx.beginPath();
+			ctx.moveTo(55, 300 - i * 25);
+			ctx.lineTo(50, 300 - i * 25);
+			ctx.stroke();
+			ctx.fillText(i, 30, 300 - i * 25);
+		}
+		// 添加点击事件，获取被试点击的坐标
+		canvas.addEventListener('click', function(event) {
+			// 获取鼠标相对于画布的位置
+			var x = event.offsetX;
+			var y = event.offsetY;
+			// 将鼠标位置转换为坐标系中的坐标
+			var x_coord = (x - 300) / 25;
+			var y_coord = (300 - y) / 25;
+			// 将坐标保存到变量中
+			if (x_coord >= 10){
+				x_coord = 10;
+			}
+			else if (x_coord <= -10){
+				x_coord = -10;
+			}
+			if (y_coord >= 10){
+				y_coord = 10;
+			}
+			else if (y_coord <= -10){
+				y_coord = -10;
+			}
+			x = 300 + 25 * x_coord;
+			y = 300 - 25 * y_coord;
+			coordinate = [x_coord, y_coord];
+			coordinateX = x_coord;
+			coordinateY = y_coord;
+			// 在画布上绘制一个红色的圆点，表示被试选择的点
+			ctx.fillStyle = 'red';
+			ctx.beginPath();
+			ctx.arc(x, y, 5, 0, 2 * Math.PI);
+			ctx.fill();
+			// 在画布上绘制一个文本，显示被试选择的坐标
+			ctx.fillStyle = 'black';
+			ctx.font = '16px Arial';
+			ctx.fillText('(' + x_coord.toFixed(1) + ', ' + y_coord.toFixed(1) + ')', x + 10, y - 10);
+
+			setTimeout(function(){
+					jsPsych.finishTrial();
+				},100);
+		});
+	}
+
+
+	var practice_trial = {
+    timeline: [
+        {
+            type: jsPsychHtmlKeyboardResponse,
+			stimulus: '<p style="font-size: 48px;">+</p>',
+			choices: "NO_KEYS",
+			trial_duration: 1000,
+        },
+        {
+            type: jsPsychImageKeyboardResponse,
+            stimulus: jsPsych.timelineVariable('color'),
+            choices: "NO_KEYS",
+			stimulus_height: 300,
+            trial_duration: 2500
+        },
+		{
+			//定义7件法
+			type: jsPsychSurvey,
+			pages: [
+				[
+
+					{
+						type: 'likert',
+						prompt: '表示された単語はどれくらい快/不快ですか？，下の数字をクリックして答えてください。',
+						name: 'nps',
+						likert_scale_min_label: '非常に不快',
+						likert_scale_max_label: '非常に快',
+						likert_scale_values: [
+							{value: 1},
+							{value: 2},
+							{value: 3},
+							{value: 4},
+							{value: 5},
+							{value: 6},
+							{value: 7}
+						],
+						required: true,
+					},
+				]
+			],
+			button_label_finish: '次へ',
+			on_finish: function(data){
+				data.nps = data.response.nps;
+			}
+		},
+		{
+			type: jsPsychHtmlKeyboardResponse,
+			stimulus: function(){
+				var html=`
+					<img src="${jsPsych.timelineVariable('color')}" style="position: relative; height: 100px;">
+					<p>表示された単語は枠内のどの位置にあるのがふさわしいと思いますか？その位置をクリックしてください。</p>
+					<canvas id="canvas"></canvas>`;
+				return html;
+			},
+			choices: "NO_KEYS",
+			// 定义一个函数，执行draw_axis函数，绘制坐标轴
+			on_load: function() {
+				draw_axis();
+			},
+			// 定义一个函数，将被试选择的坐标保存到数据中
+			on_finish: function(data) {
+			data.coordinate = coordinate;
+			data.coordinateX = coordinateX;
+			data.coordinateY = coordinateY;
+			}
+		}
+
+    ],
+    timeline_variables: [
+        { color: 'image/brp_happyness.png' },
+    ],
+	sample: {
+        type: 'fixed-repetitions',
+        size: 1
+    }
+	}
+
+	timeline.push(practice_trial);
+
+	// 定义一个jspsych进入试验说明
+	var instruction_html = `
+		<p>「開始」をクリックして本番の実験に進んでください。</p>
+	`;
+	// 定义开始实验的按钮
+	var start_button = "開始";
+
+	// 创建一个正式jspsych试验，显示说明文和开始实验的按钮
+	var instruction_trial = {
+		type: jsPsychHtmlButtonResponse,
+		stimulus: instruction_html,
+		choices: [start_button],
+		data: {
+			trial_id: 'instruction'
+		}
+	};
+
+	// 将instruction_trial添加到实验对象中
+	timeline.push(instruction_trial);
+
+
+
+	var experiment_trial = {
+    timeline: [
+        {
+            type: jsPsychHtmlKeyboardResponse,
+			stimulus: '<p style="font-size: 48px;">+</p>',
+			choices: "NO_KEYS",
+			trial_duration: 1000,
+        },
+        {
+            type: jsPsychImageKeyboardResponse,
+            stimulus: jsPsych.timelineVariable('color'),
+            choices: "NO_KEYS",
+			stimulus_height: 300,
+            trial_duration: 2500
+        },
+		{
+			//定义7件法
+			type: jsPsychSurvey,
+			pages: [
+				[
+
+					{
+						type: 'likert',
+						prompt: 'この単語はどれくらい快/不快ですか？',
+						name: 'nps',
+						likert_scale_min_label: '非常に不快',
+						likert_scale_max_label: '非常に快',
+						likert_scale_values: [
+							{value: 1},
+							{value: 2},
+							{value: 3},
+							{value: 4},
+							{value: 5},
+							{value: 6},
+							{value: 7}
+						],
+						required: true,
+					},
+				]
+			],
+			button_label_finish: '次へ',
+			on_finish: function(data){
+				data.nps = data.response.nps;
+			}
+		},
+		{
+			type: jsPsychHtmlKeyboardResponse,
+			stimulus: function(){
+				var html=`
+					<img src="${jsPsych.timelineVariable('color')}" style="position: relative; height: 100px;">
+					<p>枠内で，表示された単語が置かれるのにふさわしいと思う位置をクリックしてください。</p>
+					<canvas id="canvas"></canvas>`;
+				return html;
+			},
+			choices: "NO_KEYS",
+			// 定义一个函数，执行draw_axis函数，绘制坐标轴
+			on_load: function() {
+				draw_axis();
+			},
+			// 定义一个函数，将被试选择的坐标保存到数据中
+			on_finish: function(data) {
+			data.coordinate = coordinate;
+			data.coordinateX = coordinateX;
+			data.coordinateY = coordinateY;
+			}
+		}
+
+    ],
+    timeline_variables: [
+        { color: 'image/brb_happyness.png' },
+        { color: 'image/brb_sadness.png' },
+        { color: 'image/brb_surprise.png' },
+        { color: 'image/brp_happyness.png' },
+        { color: 'image/brp_sadness.png' },
+        { color: 'image/brp_surprise.png' },
+        { color: 'image/dky_happyness.png' },
+        { color: 'image/dky_sadness.png' },
+        { color: 'image/dky_surprise.png' }
+    ],
+	sample: {
+        type: 'fixed-repetitions',
+        size: 3
+    }
+	}
+
+	timeline.push(experiment_trial);
+	  
+  	// 定义一个等待界面
+	  var wait_trial = {
+            type: jsPsychHtmlKeyboardResponse,
+			stimulus: '<p style="font-size: 48px;">作業コードが表示されるまで，そのままお待ちください。</p>',
+			choices: "NO_KEYS",
+			trial_duration: 5000
+        };
+	    timeline.push(wait_trial);
+	  
+
+		const save_data = {
+                type: jsPsychPipe,
+                action: "save",
+                experiment_id: "w8Zurg90YxmG",
+                filename: filename,
+                data_string: ()=>jsPsych.data.get().csv()
+              };
+	jsPsych.run(timeline);
+  </script>
+</html>
